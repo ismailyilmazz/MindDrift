@@ -1,0 +1,17 @@
+HARDCODED_QUESTIONS = [
+    {"id": 1, "text": "Bu şey çıplak gözle görülür mü?"},
+    {"id": 2, "text": "Gerçek dünyada yaşamış bir şey mi?"},
+    {"id": 3, "text": "Canlı mı?"},
+    {"id": 4, "text": "İnsan yapımı mı?"},
+    {"id": 5, "text": "Elektrikle veya bir güç kaynağıyla mı çalışır?"},
+    {"id": 6, "text": "İnsan vücuduna giyilen veya takılan bir eşya mı?"},
+    {"id": 7, "text": "Bir gıda maddesi mi?"},
+    {"id": 8, "text": "Evde bulunur mu?"},
+    {"id": 9, "text": "İnsana zarar verme/öldürme riski yüksek mi?"},
+    {"id": 10, "text": "Motor veya kas gücüyle yer değiştirebilir mi?"},
+    {"id": 11, "text": "Ortalama bir insanın kucağına sığacak kadar küçük mü?"},
+    {"id": 12, "text": "Oda sıcaklığında akışkan mı?"},
+    {"id": 13, "text": "Neredeyse herkesin buna erişimi var mı?"},
+    {"id": 14, "text": "Belirgin bir rengi var mı?"},
+    {"id": 15, "text": "Suyla doğrudan ilişkili mi"},    
+]

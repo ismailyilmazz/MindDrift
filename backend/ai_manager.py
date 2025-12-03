@@ -10,20 +10,20 @@ genai.configure(api_key=API_KEY)
 MODEL_NAME = "gemini-2.5-pro" 
 
 async def generate_prediction_and_code(answers: list):
+    """
+    1. Cevapları analiz eder ve Tahmin Yapar.
+    2. Tahmin edilen nesneyi Three.js koduyla yazar (Import Map kullanarak).
+    """
     try:
         model = genai.GenerativeModel(MODEL_NAME)
         
-        #TAHMİN
         guess_prompt = f"""
         GÖREV: Bir tahmin oyununun yapay zekasısın.
-        Kullanıcının sorulara verdiği cevaplar aşağıda. Bu cevaplara göre AKLINDAKİ NESNEYİ tahmin et.
+        Kullanıcının sorulara verdiği cevaplar: {answers}
         
         KURALLAR:
         1. Sadece FİZİKSEL, SOMUT nesneler veya KARAKTERLER tahmin et (Soyut kavramlar yasak).
         2. Çıktı olarak sadece nesnenin ismini ver. Başka hiçbir şey yazma.
-        
-        KULLANICI CEVAPLARI:
-        {answers}
         
         TAHMİN (Tek kelime veya kısa öbek):
         """
@@ -31,30 +31,37 @@ async def generate_prediction_and_code(answers: list):
         prediction = guess_res.text.strip()
         print(f"🤖 AI Tahmini: {prediction}")
 
-        #KODLAMA
         code_prompt = f"""
         Sen uzman bir Three.js geliştiricisisin.
         HEDEF: "{prediction}" nesnesini temsil eden 3D bir sahne oluştur.
         
-        TEKNİK GEREKSİNİMLER:
-        1. Tek bir HTML dosyası üret. İçinde <script type="module"> ile Three.js kodu olsun.
-        2. Three.js'i CDN'den import et: https://unpkg.com/three@0.160.0/build/three.module.js
-        3. OrbitControls ve Işıklandırma ekle. Arka plan rengi #111 olsun.
-        4. Nesneyi BASİT GEOMETRİLER (Box, Sphere, Cylinder) birleştirerek oluştur. External model yükleme.
+        KRİTİK JAVASCRIPT KURALLARI (BU SIRAYI BOZMA):
+        1. HTML <head> kısmına IMPORT MAP ekle.
+        2. <script type="module"> bloğunu aç.
+        3. EN ÜSTE IMPORTLARI YAZ (Bunlar try-catch içinde OLAMAZ!):
+           import * as THREE from 'three';
+           import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
+        4. Importlardan SONRA 'try {{ ... }} catch(e) {{ ... }}' bloğunu başlat.
+        5. Tüm sahne kurulumunu (Scene, Camera, Renderer, Object) bu try bloğunun içine yaz.
         
-        AŞAĞIDAKİ ETKİLEŞİM BUTONLARINI EKRANA EKLE (HTML/CSS OLARAK):
-        Sol üst köşeye sabitlenmiş (fixed) şu butonları koy:
-        
-        1. [DOĞRU BİLDİN!] -> ID: 'btn-correct'
-           - Tıklanınca: window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
-           
-        2. [YANLIŞ - 5 SORU DAHA SOR] -> ID: 'btn-wrong'
-           - Tıklanınca: window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
-           
-        3. [YANLIŞ - OYUNU BİTİR] -> ID: 'btn-quit'
-           - Tıklanınca: window.close();
+        TEKNİK DETAYLAR:
+        - Import Map:
+           <script type="importmap">
+           {{ "imports": {{ "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" }} }}
+           </script>
+        - Sahne Arkaplanı: scene.background = new THREE.Color(0x333333);
+        - Işıklar: AmbientLight ve DirectionalLight MUTLAKA ekle.
+        - Nesne: "{prediction}" nesnesini basit geometrilerle (Group, Box, Sphere, Cylinder) benzeterek çiz. External model yükleme.
+        - Animasyon: Nesne kendi etrafında yavaşça dönsün.
+        - Hata Yönetimi: catch bloğunda hatayı ekrana bas: document.body.innerHTML = `<h1 style="color:red">${{e.message}}</h1>`;
 
-        ÇIKTI: Sadece saf HTML kodu. Markdown kullanma.
+        BUTONLAR (SOL ÜST):
+        1. [DOĞRU BİLDİN!] -> ID: 'btn-confirm' -> window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
+        2. [YANLIŞ - 5 SORU DAHA] -> ID: 'btn-retry' -> window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
+        3. [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+
+        ÇIKTI FORMATI:
+        Sadece saf HTML kodu ver. Markdown (```html) kullanma.
         """
         
         code_res = await model.generate_content_async(code_prompt)
@@ -64,7 +71,7 @@ async def generate_prediction_and_code(answers: list):
 
     except Exception as e:
         print(f"AI Hatası: {e}")
-        return {"prediction": "Hata", "html_code": "<h1>Bir hata oluştu</h1>"}
+        return {"prediction": "Hata", "html_code": f"<h1>Sistem Hatası: {e}</h1>"}
 
 async def generate_followup_questions(answers: list):
     try:
@@ -72,17 +79,15 @@ async def generate_followup_questions(answers: list):
         
         prompt = f"""
         Sen bir tahmin oyunusun. 
-        Kullanıcı şu ana kadar şu cevapları verdi: {answers}
+        Kullanıcının verdiği cevaplar: {answers}
         
-        Ancak önceki tahminimiz YANLIŞ çıktı.
-        Nesneyi bulmak için çemberi daraltacak, daha detaylı ve ayırt edici 5 YENİ soru üret.
+        Önceki tahminimiz YANLIŞ çıktı.
+        Nesneyi bulmak için çemberi daraltacak 5 YENİ ve AYIRT EDİCİ soru üret.
         
-        FORMAT:
-        Sadece şu JSON formatında cevap ver:
+        FORMAT (JSON):
         {{
             "questions": [
                 {{"id": 101, "text": "Soru 1?"}},
-                {{"id": 102, "text": "Soru 2?"}},
                 ...
             ]
         }}
@@ -92,9 +97,10 @@ async def generate_followup_questions(answers: list):
             prompt, 
             generation_config={"response_mime_type": "application/json"}
         )
-        # Gelen JSON string'i Python objesine çevir
-        return json.loads(response.text)
+        
+        clean_json = response.text.replace("```json", "").replace("```", "").strip()
+        return json.loads(clean_json)
         
     except Exception as e:
         print(f"Soru Üretme Hatası: {e}")
-        return {"questions": [{"id": 999, "text": "Bu nesne çok mu nadir bulunur?"}]}
+        return {"questions": [{"id": 999, "text": "Yeni sorular üretilirken hata oluştu."}]}

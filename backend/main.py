@@ -12,7 +12,6 @@ db_manager.init_db()
 
 app = FastAPI()
 
-# CORS (Frontend Erişimi)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

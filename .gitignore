@@ -3,3 +3,5 @@ venv/
 __pycache__/
 *.db
 .DS_Store
+backend/generated_pages/
+.vscode/

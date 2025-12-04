@@ -1,0 +1,95 @@
+body {
+    margin: 0;
+    overflow: hidden; /* Scrollbar çıkmasını engeller */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000; /* Three.js yüklenene kadar siyah */
+    color: white;
+}
+
+/* Three.js Canvas'ı (Otomatik eklenir ama garantiye alalım) */
+canvas {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; /* En altta */
+}
+
+/* UI Katmanı - Canvas'ın üstüne biner */
+#game-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Canvas'ın üstünde */
+    pointer-events: none; /* ÖNEMLİ: Tıklamalar arkadaki oyuna geçsin */
+}
+
+/* Soru Kutusu */
+#question-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px 30px;
+    border-radius: 15px;
+    border: 2px solid #00ffcc;
+    backdrop-filter: blur(5px);
+}
+
+#question-text {
+    margin: 0;
+    font-size: 24px;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+#progress-text {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* Loading Ekranı */
+#loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20; /* Her şeyin üstünde */
+    pointer-events: all; /* Burası tıklanabilir olsun */
+}
+
+/* Kontrol Bilgisi */
+#controls-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Basit bir loader animasyonu */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #00ffcc;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-top: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

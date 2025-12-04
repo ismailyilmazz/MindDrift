@@ -1,6 +1,6 @@
 HARDCODED_QUESTIONS = [
     {"id": 1, "text": "Bu şey çıplak gözle görülür mü?"},
-    {"id": 2, "text": "Gerçek dünyada yaşamış bir şey mi?"},
+    {"id": 2, "text": "Kurgu ürünü bir şey mi?"},
     {"id": 3, "text": "Canlı mı?"},
     {"id": 4, "text": "İnsan yapımı mı?"},
     {"id": 5, "text": "Elektrikle veya bir güç kaynağıyla mı çalışır?"},

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
-import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable } from './scene.js';
+import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable ,createCar} from './scene.js';
 import { startGame } from './api_client.js'; // API fonksiyonunu import et
 
 // 1. Loading Ekranı Yönetimi
@@ -12,7 +12,7 @@ createLighting();
 createEnvironment();
 
 // Kamera Başlangıç Pozisyonu
-camera.position.set(0, 10, 20);
+camera.position.set(0, 10, 30);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -24,6 +24,8 @@ const DISTANCE_BETWEEN_QUESTIONS = 50; // Her soru arası mesafe (Z ekseninde)
 async function initGameWorld() {
     try {
         if (loadingMessage) loadingMessage.innerText = "Sorular Yükleniyor...";
+
+        await createCar(scene);
         
         // Backend'den soruları çek
         const questions = await startGame(); 

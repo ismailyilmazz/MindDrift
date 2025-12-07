@@ -1,4 +1,5 @@
 import * as THREE from 'three'; 
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export const scene = new THREE.Scene();
 
@@ -158,5 +159,43 @@ export function createQuestionTable(scene, zPosition, questions) {
     questionTable.position.set(15, 0, zPosition);
     
     scene.add(questionTable);
+}
+
+export function createCar(scene) {
+    return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        
+        loader.load(
+            './assets/car.glb', 
+            (gltf) => {
+                const carModel = gltf.scene;
+
+                carModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                carModel.scale.set(5,5, 5); 
+                carModel.position.set(+15, 0, -40); 
+                
+                carModel.rotation.y = Math.PI; 
+
+                scene.add(carModel);
+                
+                console.log("🏎️ Araba başarıyla yüklendi!");
+                resolve(carModel); 
+            },
+            (xhr) => {
+                // Yükleme yüzdesi (Console'da görebilirsin)
+                console.log((xhr.loaded / xhr.total * 100) + '% yüklendi');
+            },
+            (error) => {
+                console.error('Araba yüklenirken hata oluştu:', error);
+                reject(error);
+            }
+        );
+    });
 }
 

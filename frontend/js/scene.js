@@ -32,7 +32,7 @@ export function createLighting() {
 }
 
 export function createEnvironment() {
-    const planeGeometry = new THREE.PlaneGeometry(20, 200); 
+    const planeGeometry = new THREE.PlaneGeometry(23, 1400); 
     const planeMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x16213e, 
         roughness: 0.1,   
@@ -78,7 +78,7 @@ export function createDecisionWalls(scene, zPosition) {
 
         const texture = new THREE.CanvasTexture(canvas);
 
-        const geometry = new THREE.BoxGeometry(10, 8, 1); 
+        const geometry = new THREE.BoxGeometry(7.5, 8, 1); 
         
   
         const material = new THREE.MeshStandardMaterial({ 
@@ -100,10 +100,11 @@ export function createDecisionWalls(scene, zPosition) {
         return wall;
     }
 
-    const yesWall = createWallWithText("EVET", "#008800", -5, zPosition, "yes");
-    const noWall = createWallWithText("HAYIR", "#880000", 5, zPosition, "no");
+    const yesWall = createWallWithText("EVET", "#008800", 7.5, zPosition, "yes");
+    const noWall = createWallWithText("HAYIR", "#880000", -7.5, zPosition, "no");
+    const kismenWall = createWallWithText("KISMEN", "#888800", 0, zPosition, "kismen");
 
-    return [yesWall, noWall];
+    return [yesWall, noWall,kismenWall];
 }
 
 export function createQuestionTable(scene, zPosition, questions) {

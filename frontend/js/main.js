@@ -43,7 +43,7 @@ async function initGameWorld() {
 
             // 1. Soru Tabelasını Yerleştir
             // q.text -> "Canlı mı?" gibi metni taşır
-            createQuestionTable(scene, zPosition+ 15, q.text);
+            createQuestionTable(scene, zPosition+ 20, q.text);
 
             // 2. Evet/Hayır Duvarlarını Yerleştir
             // Duvarları tabelanın tam altına veya biraz gerisine koyabilirsin.

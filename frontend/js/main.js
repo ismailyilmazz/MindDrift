@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
-import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls } from './scene.js';
+import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls,createQuestionTable } from './scene.js';
 
 // 1. Loading Ekranını Manuel Olarak Gizle
 const loadingScreen = document.getElementById('loading-screen');
@@ -12,6 +12,8 @@ createEnvironment();
 
 // Test amaçlı duvarları ekle (Z ekseninde -20 konumuna)
 createDecisionWalls(scene, -20);
+createQuestionTable(scene, -10, "Bu bir test sorusudur?");
+
 
 // 3. Geçici Kamera Ayarları (OrbitControls ile gezebilmek için)
 camera.position.set(0, 10, 20); // Biraz yukarıdan ve geriden bak

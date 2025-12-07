@@ -1,36 +1,73 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; 
-import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls,createQuestionTable } from './scene.js';
+import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable } from './scene.js';
+import { startGame } from './api_client.js'; // API fonksiyonunu import et
 
-// 1. Loading Ekranını Manuel Olarak Gizle
+// 1. Loading Ekranı Yönetimi
 const loadingScreen = document.getElementById('loading-screen');
-if (loadingScreen) loadingScreen.style.display = 'none';
+const loadingMessage = document.getElementById('loading-message');
 
-// 2. Sahne Bileşenlerini Yükle (scene.js fonksiyonları)
+// 2. Temel Sahne Kurulumu
 createLighting();
 createEnvironment();
 
-// Test amaçlı duvarları ekle (Z ekseninde -20 konumuna)
-createDecisionWalls(scene, -20);
-createQuestionTable(scene, -10, "Bu bir test sorusudur?");
-
-
-// 3. Geçici Kamera Ayarları (OrbitControls ile gezebilmek için)
-camera.position.set(0, 10, 20); // Biraz yukarıdan ve geriden bak
+// Kamera Başlangıç Pozisyonu
+camera.position.set(0, 10, 20);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; // Yumuşak hareket
+controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-// 4. Basit Render Döngüsü
+// --- DİNAMİK SAHNE OLUŞTURMA ---
+
+const DISTANCE_BETWEEN_QUESTIONS = 50; // Her soru arası mesafe (Z ekseninde)
+
+async function initGameWorld() {
+    try {
+        if (loadingMessage) loadingMessage.innerText = "Sorular Yükleniyor...";
+        
+        // Backend'den soruları çek
+        const questions = await startGame(); 
+
+        if (!questions || questions.length === 0) {
+            console.error("Soru listesi boş geldi!");
+            return;
+        }
+
+        console.log(`${questions.length} adet soru sahneye yerleştiriliyor...`);
+
+        // Soruları döngü ile sahneye diz
+        questions.forEach((q, index) => {
+            // Z pozisyonunu hesapla (Örn: -50, -100, -150...)
+            // index + 1 yapıyoruz ki ilk soru 0. noktada değil, biraz ileride olsun.
+            const zPosition = -1 * (index + 1) * DISTANCE_BETWEEN_QUESTIONS;
+
+            // 1. Soru Tabelasını Yerleştir
+            // q.text -> "Canlı mı?" gibi metni taşır
+            createQuestionTable(scene, zPosition+ 15, q.text);
+
+            // 2. Evet/Hayır Duvarlarını Yerleştir
+            // Duvarları tabelanın tam altına veya biraz gerisine koyabilirsin.
+            // Şimdilik aynı Z hizasına koyuyoruz.
+            createDecisionWalls(scene, zPosition);
+        });
+
+        // Yükleme bitti, ekranı kapat
+        if (loadingScreen) loadingScreen.style.display = 'none';
+
+    } catch (error) {
+        console.error("Oyun dünyası oluşturulurken hata:", error);
+        if (loadingMessage) loadingMessage.innerText = "Hata Oluştu!";
+    }
+}
+
+// Oyunu Başlat
+initGameWorld();
+
+// --- RENDER DÖNGÜSÜ ---
 function animate() {
     requestAnimationFrame(animate);
-
-    // Kontrolleri güncelle
     controls.update();
-
-    // Sahneyi çiz
     renderer.render(scene, camera);
 }
 
-// Başlat
 animate();

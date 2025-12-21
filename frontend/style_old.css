@@ -1,79 +1,32 @@
 body {
     margin: 0;
-    overflow: hidden;
+    overflow: hidden; /* Scrollbar çıkmasını engeller */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #000;
+    background-color: #000; /* Three.js yüklenene kadar siyah */
     color: white;
 }
 
+/* Three.js Canvas'ı (Otomatik eklenir ama garantiye alalım) */
 canvas {
     display: block;
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1;
+    z-index: 1; /* En altta */
 }
 
+/* UI Katmanı - Canvas'ın üstüne biner */
 #game-ui {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 10;
+    z-index: 10; /* Canvas'ın üstünde */
+    pointer-events: none; /* ÖNEMLİ: Tıklamalar arkadaki oyuna geçsin */
 }
 
-/* EKRAN YÖNETIMI */
-.screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    pointer-events: all;
-}
-
-.screen.active {
-    display: flex;
-}
-
-/* BAŞLANGIÇ EKRANI */
-#start-screen {
-    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-    justify-content: center;
-    align-items: center;
-    z-index: 50;
-}
-
-.start-container {
-    text-align: center;
-}
-
-.start-container h1 {
-    font-size: 72px;
-    margin: 0 0 20px 0;
-    color: #00ffcc;
-    text-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-    animation: glow 2s ease-in-out infinite;
-}
-
-.start-container p {
-    font-size: 24px;
-    color: #aaa;
-    margin: 0 0 40px 0;
-}
-
-@keyframes glow {
-    0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
-    50% { text-shadow: 0 0 40px rgba(0, 255, 204, 0.8); }
-}
-
-/* OYUN EKRANI */
-#game-screen {
-    pointer-events: none;
-}
-
+/* Soru Kutusu */
 #question-container {
     position: absolute;
     top: 20px;
@@ -85,8 +38,6 @@ canvas {
     border-radius: 15px;
     border: 2px solid #00ffcc;
     backdrop-filter: blur(5px);
-    z-index: 15;
-    pointer-events: none;
 }
 
 #question-text {
@@ -102,6 +53,7 @@ canvas {
     color: #aaa;
 }
 
+/* Loading Ekranı */
 #loading-screen {
     position: absolute;
     top: 0;
@@ -113,10 +65,11 @@ canvas {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 20;
-    pointer-events: all;
+    z-index: 20; /* Her şeyin üstünde */
+    pointer-events: all; /* Burası tıklanabilir olsun */
 }
 
+/* Kontrol Bilgisi */
 #controls-hint {
     position: absolute;
     bottom: 20px;
@@ -125,6 +78,7 @@ canvas {
     opacity: 0.7;
 }
 
+/* Basit bir loader animasyonu */
 .loader {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #00ffcc;
@@ -140,67 +94,9 @@ canvas {
     100% { transform: rotate(360deg); }
 }
 
-/* BUTONLAR */
-.btn-large {
-    background: #00ffcc;
-    color: #000;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 18px;
-    margin: 15px;
-    transition: all 0.3s;
-    pointer-events: all;
-}
-
-.btn-large:hover {
-    background: #00ffaa;
-    transform: scale(1.05);
-}
-
-.btn-play {
-    background: linear-gradient(135deg, #00ffcc 0%, #00ff99 100%);
-}
-
-.btn-exit {
-    background: #666;
-    color: white;
-}
-
-.btn-exit:hover {
-    background: #888;
-}
-
-/* OYUN SONU EKRANI */
-#end-screen {
-    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-    justify-content: center;
-    align-items: center;
-    z-index: 60;
-}
-
-.end-container {
-    text-align: center;
-}
-
-.end-container h1 {
-    font-size: 64px;
-    color: #f1c40f;
-    margin: 20px 0;
-    text-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
-}
-
-.end-container p {
-    font-size: 20px;
-    color: #aaa;
-    margin: 20px 0;
-}
-
-/* MODAL */
+/* Modal Popup */
 .modal {
-    display: flex;
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -211,14 +107,10 @@ canvas {
     justify-content: center;
     align-items: center;
     pointer-events: all;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
 }
 
 .modal.show {
-    opacity: 1;
-    visibility: visible;
+    display: flex;
 }
 
 .modal-content {
@@ -286,6 +178,14 @@ canvas {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.modal-footer {
+    padding: 15px;
+    border-top: 1px solid #00ffcc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
@@ -318,5 +218,65 @@ canvas {
 
 .btn-wrong:hover {
     background: #c0392b;
+    transform: scale(1.05);
+}
+
+.btn-close {
+    background: #00ffcc;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-close:hover {
+    background: #00ffaa;
+    transform: scale(1.05);
+}
+
+/* Game Over Modal */
+.game-over-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    height: auto;
+    min-height: 300px;
+    padding: 40px;
+    text-align: center;
+    border: 2px solid #f1c40f !important;
+}
+
+.game-over-content h1 {
+    font-size: 48px;
+    color: #f1c40f;
+    margin: 20px 0;
+}
+
+.game-over-content p {
+    font-size: 18px;
+    color: #aaa;
+    margin: 20px 0;
+}
+
+.btn-restart {
+    background: #f1c40f;
+    color: #000;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 20px;
+    transition: all 0.3s;
+}
+
+.btn-restart:hover {
+    background: #f39c12;
     transform: scale(1.05);
 }

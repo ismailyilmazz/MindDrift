@@ -2,105 +2,119 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 import json
+import traceback
 
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-genai.configure(api_key=API_KEY)
-MODEL_NAME = "gemini-2.5-pro" 
+if not API_KEY:
+    print("⚠️  GEMINI_API_KEY .env dosyasında bulunmuyor!")
+else:
+    print(f"✅ API Key yüklendi: {API_KEY[:10]}...")
 
-async def generate_prediction_and_code(answers: list):
+genai.configure(api_key=API_KEY)
+MODEL_NAME = "gemini-2.5-pro"  # Doğru model
+
+def generate_prediction_and_code(answers: list):
     """
     1. Cevapları analiz eder ve Tahmin Yapar.
-    2. Tahmin edilen nesneyi Three.js koduyla yazar (Import Map kullanarak).
+    2. Tahmin edilen nesneyi Three.js koduyla yazar.
     """
     try:
+        print("🔄 AI Tahmin Modeli başlatılıyor...")
         model = genai.GenerativeModel(MODEL_NAME)
         
+        # ADIM 1: Tahmin
         guess_prompt = f"""
-        GÖREV: Bir tahmin oyununun yapay zekasısın.
-        Kullanıcının sorulara verdiği cevaplar: {answers}
+Kullanıcının sorulara verdiği cevaplar: {answers}
+
+GÖREV: Sadece nesnenin adını tahmin et. BAŞKA HİÇBİR ŞEY YAZMA.
+Örnek cevaplar: "Araba", "Kalem", "Köpek", "Bilgisayar"
+
+CEVAP (sadece nesne adı):"""
         
-        KURALLAR:
-        1. Sadece FİZİKSEL, SOMUT nesneler veya KARAKTERLER tahmin et (Soyut kavramlar yasak).
-        2. Çıktı olarak sadece nesnenin ismini ver. Başka hiçbir şey yazma.
-        
-        TAHMİN (Tek kelime veya kısa öbek):
-        """
-        guess_res = await model.generate_content_async(guess_prompt)
+        print("🤖 Tahmin yapılıyor...")
+        guess_res = model.generate_content(guess_prompt)
         prediction = guess_res.text.strip()
-        print(f"🤖 AI Tahmini: {prediction}")
+        print(f"✅ AI Tahmini: {prediction}")
 
-        code_prompt = f"""
-        Sen uzman bir Three.js geliştiricisisin.
-        HEDEF: "{prediction}" nesnesini temsil eden 3D bir sahne oluştur.
-        
-        KRİTİK JAVASCRIPT KURALLARI (BU SIRAYI BOZMA):
-        1. HTML <head> kısmına IMPORT MAP ekle.
-        2. <script type="module"> bloğunu aç.
-        3. EN ÜSTE IMPORTLARI YAZ (Bunlar try-catch içinde OLAMAZ!):
-           import * as THREE from 'three';
-           import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
-        4. Importlardan SONRA 'try {{ ... }} catch(e) {{ ... }}' bloğunu başlat.
-        5. Tüm sahne kurulumunu (Scene, Camera, Renderer, Object) bu try bloğunun içine yaz.
-        
-        TEKNİK DETAYLAR:
-        - Import Map:
-           <script type="importmap">
-           {{ "imports": {{ "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" }} }}
-           </script>
-        - Sahne Arkaplanı: scene.background = new THREE.Color(0x333333);
-        - Işıklar: AmbientLight ve DirectionalLight MUTLAKA ekle.
-        - Nesne: "{prediction}" nesnesini basit geometrilerle (Group, Box, Sphere, Cylinder) benzeterek çiz. External model yükleme.
-        - Animasyon: Nesne kendi etrafında yavaşça dönsün.
-        - Hata Yönetimi: catch bloğunda hatayı ekrana bas: document.body.innerHTML = `<h1 style="color:red">${{e.message}}</h1>`;
+        # ADIM 2: HTML Kod Üret
+        code_prompt = f"""Sana "{prediction}" nesnesini temsil eden bir Three.js 3D sahne HTML kodu yazacaksın.
 
-        BUTONLAR (SOL ÜST):
-        1. [DOĞRU BİLDİN!] -> ID: 'btn-confirm' -> window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
-        2. [YANLIŞ - 5 SORU DAHA] -> ID: 'btn-retry' -> window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
-        3. [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+KURALLAR:
+1. Sadece HTML döndür, Markdown kullanma
+2. Import map'i kullan:
+```
+<script type="importmap">
+{{"imports": {{"three": "https://unpkg.com/three@r128/build/three.module.js"}}}}
+</script>
+```
+3. Basit geometriler kullan (Box, Sphere, Cylinder)
+4. Nesneyi rotate et (animasyon)
+5. İyi aydınlatma ekle
+6. Siyah arka plan
+7. Hata mesajlarını ekrana bas
 
-        ÇIKTI FORMATI:
-        Sadece saf HTML kodu ver. Markdown (```html) kullanma.
-        """
+HTML KODUNUSadece HTML ver:"""
+
+        print("📝 HTML Kodu üretiliyor...")
+        code_res = model.generate_content(code_prompt)
+        html_code = code_res.text.strip()
         
-        code_res = await model.generate_content_async(code_prompt)
-        clean_code = code_res.text.replace("```html", "").replace("```", "").strip()
+        # Markdown markers'ı kaldır
+        if html_code.startswith("```html"):
+            html_code = html_code[7:]
+        if html_code.startswith("```"):
+            html_code = html_code[3:]
+        if html_code.endswith("```"):
+            html_code = html_code[:-3]
+        html_code = html_code.strip()
         
-        return {"prediction": prediction, "html_code": clean_code}
+        print(f"✅ HTML Kodu Oluşturuldu ({len(html_code)} karakter)")
+        return {"prediction": prediction, "html_code": html_code}
 
     except Exception as e:
-        print(f"AI Hatası: {e}")
-        return {"prediction": "Hata", "html_code": f"<h1>Sistem Hatası: {e}</h1>"}
+        print(f"❌ AI Hatası: {e}")
+        traceback.print_exc()
+        return {
+            "prediction": "Hata", 
+            "html_code": f"""<html><body style="background:#000;color:red;font-family:Arial">
+<h1>❌ Hata Oluştu</h1>
+<p>{str(e)}</p>
+</body></html>"""
+        }
 
-async def generate_followup_questions(answers: list):
+def generate_followup_questions(answers: list):
     try:
+        print("🔄 5 Yeni Soru üretiliyor...")
         model = genai.GenerativeModel(MODEL_NAME)
         
-        prompt = f"""
-        Sen bir tahmin oyunusun. 
-        Kullanıcının verdiği cevaplar: {answers}
+        prompt = f"""Kullanıcının cevapları: {answers}
+
+5 YENİ ve AYIRT EDİCİ soru üret. Cevapları JSON formatında döndür.
+
+FORMAT (sadece JSON):
+{{"questions": [{{"id": 1, "text": "Soru 1?"}}, {{"id": 2, "text": "Soru 2?"}}]}}
+
+JSON:"""
         
-        Önceki tahminimiz YANLIŞ çıktı.
-        Nesneyi bulmak için çemberi daraltacak 5 YENİ ve AYIRT EDİCİ soru üret.
+        response = model.generate_content(prompt)
         
-        FORMAT (JSON):
-        {{
-            "questions": [
-                {{"id": 101, "text": "Soru 1?"}},
-                ...
-            ]
-        }}
-        """
+        # Markdown cleanup
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
         
-        response = await model.generate_content_async(
-            prompt, 
-            generation_config={"response_mime_type": "application/json"}
-        )
-        
-        clean_json = response.text.replace("```json", "").replace("```", "").strip()
-        return json.loads(clean_json)
+        result = json.loads(text)
+        print(f"✅ {len(result.get('questions', []))} Yeni Soru Üretildi")
+        return result
         
     except Exception as e:
-        print(f"Soru Üretme Hatası: {e}")
-        return {"questions": [{"id": 999, "text": "Yeni sorular üretilirken hata oluştu."}]}
+        print(f"❌ Soru Üretme Hatası: {e}")
+        traceback.print_exc()
+        return {"questions": [{"id": 999, "text": "Bağlantı hatası - lütfen tekrar deneyin"}]}

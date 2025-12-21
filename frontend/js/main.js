@@ -26,7 +26,7 @@ createEnvironment();
 camera.position.set(0, 10, 20);
 
 // Soru mesafesi
-const DISTANCE_BETWEEN_QUESTIONS = 80;
+const DISTANCE_BETWEEN_QUESTIONS = 180;
 
 async function initGameWorld() {
     try {

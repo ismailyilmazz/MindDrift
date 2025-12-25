@@ -8,7 +8,7 @@ scene.background = new THREE.Color(worldColor);
 scene.fog = new THREE.FogExp2(worldColor, 0.01); 
 
 export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 10);
+camera.position.set(0, 0, 0);
 
 export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -33,21 +33,36 @@ export function createLighting() {
 }
 
 export function createEnvironment() {
-    const planeGeometry = new THREE.PlaneGeometry(23, 1400); 
-    const planeMaterial = new THREE.MeshStandardMaterial({ 
+    // 1. YOL (Arabanın gittiği şerit - Koyu Lacivert)
+    const roadGeometry = new THREE.PlaneGeometry(23, 5000); 
+    const roadMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x16213e, 
         roughness: 0.1,   
         metalness: 0.5    
     });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    const road = new THREE.Mesh(roadGeometry, roadMaterial);
+    road.rotation.x = -Math.PI / 2;
+    road.position.z = -2000; 
+    road.receiveShadow = true;
+    scene.add(road);
 
-    plane.rotation.x = -Math.PI / 2;
-    plane.receiveShadow = true;
-    scene.add(plane);
+    // 2. ZEMİN (Yolun dışındaki alan - GRİ)
+    // Çok büyük bir düzlem oluşturuyoruz (10.000 x 10.000 birim)
+    const groundGeometry = new THREE.PlaneGeometry(10000, 10000); 
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x808080, // İSTEDİĞİN GRİ RENK BURADA
+        roughness: 1,    // Mat olsun, parlamasın
+        metalness: 0     
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.5; // Yolun çok az altında dursun (Yol üstte kalsın)
+    ground.receiveShadow = true;
+    
+    scene.add(ground);
 
-    const gridHelper = new THREE.GridHelper(400, 100, 0xe94560, 0x0f3460);
-    gridHelper.position.y = 0.01; 
-    scene.add(gridHelper);
+    // GridHelper (Kareli Çizgiler) İSTEMİYORDUN, O YÜZDEN SİLDİM.
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -61,7 +76,7 @@ export function createDecisionWalls(scene, zPosition) {
     function createWallWithText(text, colorHex, x, z, type) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        canvas.width = 512; 
+        canvas.width = 512;
         canvas.height = 256;
         
         context.fillStyle = colorHex; 
@@ -103,9 +118,9 @@ export function createDecisionWalls(scene, zPosition) {
 
     const yesWall = createWallWithText("EVET", "#008800", 7.5, zPosition, "yes");
     const noWall = createWallWithText("HAYIR", "#880000", -7.5, zPosition, "no");
-    const kismenWall = createWallWithText("KISMEN", "#888800", 0, zPosition, "kismen");
+    const maybeWall = createWallWithText("KISMEN", "#888800", 0, zPosition, "kismen");
 
-    return [yesWall, noWall,kismenWall];
+    return [yesWall, noWall,maybeWall];
 }
 
 export function createQuestionTable(scene, zPosition, questions) {
@@ -161,15 +176,28 @@ export function createQuestionTable(scene, zPosition, questions) {
     scene.add(questionTable);
 }
 
+// scene.js içindeki createCar fonksiyonunu tamamen bununla değiştir:
+
 export function createCar(scene) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        console.log("🏎️ Araba modeli yükleniyor...");
+        
         const loader = new GLTFLoader();
         
+        // ÖNEMLİ: Dosya yolunun 'assets/car.glb' olduğundan ve
+        // assets klasörünün index.html'in yanında olduğundan emin ol.
         loader.load(
-            './assets/car.glb', 
+            'assets/lowpolycar.glb', 
             (gltf) => {
                 const carModel = gltf.scene;
-
+                
+                // Model çok büyük veya küçükse burayla oyna
+                carModel.scale.set(3, 3, 3); 
+                
+                // Arabanın arkası kameraya dönük olsun (180 derece)
+                //carModel.rotation.y = Math.PI; 
+                
+                // Gölgeleri aç
                 carModel.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -177,23 +205,30 @@ export function createCar(scene) {
                     }
                 });
 
-                carModel.scale.set(5,5, 5); 
-                carModel.position.set(+15, 0, -40); 
-                
-                carModel.rotation.y = Math.PI; 
-
                 scene.add(carModel);
-                
-                console.log("🏎️ Araba başarıyla yüklendi!");
-                resolve(carModel); 
+                console.log("✨ Gerçek araba başarıyla yüklendi!");
+                resolve(carModel);
             },
+            
+            // Yükleme sırasında ilerleme (Opsiyonel)
             (xhr) => {
-                // Yükleme yüzdesi (Console'da görebilirsin)
-                console.log((xhr.loaded / xhr.total * 100) + '% yüklendi');
+                console.log(`Yükleniyor: %${(xhr.loaded / xhr.total * 100).toFixed(0)}`);
             },
+            
+            // HATA OLURSA (Yedek Plan)
             (error) => {
-                console.error('Araba yüklenirken hata oluştu:', error);
-                reject(error);
+                console.warn("⚠️ Araba modeli bulunamadı veya yüklenemedi. Kırmızı kutu devreye giriyor.", error);
+                
+                // FALLBACK: Kırmızı Kutu
+                const geometry = new THREE.BoxGeometry(4, 2, 6);
+                const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+                const fallbackCar = new THREE.Mesh(geometry, material);
+                
+                fallbackCar.position.y = 2;
+                fallbackCar.castShadow = true;
+                
+                scene.add(fallbackCar);
+                resolve(fallbackCar);
             }
         );
     });

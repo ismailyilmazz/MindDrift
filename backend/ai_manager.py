@@ -7,7 +7,7 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 genai.configure(api_key=API_KEY)
-MODEL_NAME = "gemini-2.5-pro" 
+MODEL_NAME = "gemini-2.5-flash" 
 
 async def generate_prediction_and_code(answers: list):
     """
@@ -56,9 +56,8 @@ async def generate_prediction_and_code(answers: list):
         - Hata Yönetimi: catch bloğunda hatayı ekrana bas: document.body.innerHTML = `<h1 style="color:red">${{e.message}}</h1>`;
 
         BUTONLAR (SOL ÜST):
-        1. [DOĞRU BİLDİN!] -> ID: 'btn-confirm' -> window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
-        2. [YANLIŞ - 5 SORU DAHA] -> ID: 'btn-retry' -> window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
-        3. [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+        - Sadece 1 buton olacak: [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+        - Başka buton EKLEME!
 
         ÇIKTI FORMATI:
         Sadece saf HTML kodu ver. Markdown (```html) kullanma.

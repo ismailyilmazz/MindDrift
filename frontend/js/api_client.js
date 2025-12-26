@@ -87,3 +87,35 @@ export async function continueGame(currentAnswers) {
 export function formatAnswer(questionText, answerText) {
     return `${questionText}: ${answerText}`;
 }
+
+/**
+ * 5. BAŞARI ONAYLA (DOĞRU TAHMİN)
+ * Kullanıcı "Doğru Bildin!" dediğinde çalışır.
+ * Tahmini veritabanına kalıcı olarak kaydeder.
+ * @param {Array} answers - Tüm cevaplar
+ * @param {string} prediction - AI'ın tahmini
+ * @param {string} htmlContent - Üretilen HTML kodu
+ * @returns {Promise<Object>} { status: "saved" }
+ */
+export async function confirmSuccess(answers, prediction, htmlContent) {
+    console.log("💾 Başarılı tahmin kaydediliyor...");
+    try {
+        const response = await fetch(`${BASE_URL}/confirm-success`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                answers: answers,
+                prediction: prediction,
+                html_content: htmlContent
+            })
+        });
+
+        if (!response.ok) throw new Error("Kayıt yapılamadı");
+        const data = await response.json();
+        console.log("✅ Tahmin veritabanına kaydedildi!");
+        return data;
+    } catch (error) {
+        console.error("❌ Kayıt hatası:", error);
+        return null;
+    }
+}

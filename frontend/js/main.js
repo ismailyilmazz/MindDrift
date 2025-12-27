@@ -1,10 +1,11 @@
 import * as THREE from 'three';
-import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable, createCar } from './scene.js';
+import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable, createCar, sunLight } from './scene.js';
 import { startGame, formatAnswer, getPrediction, continueGame, confirmSuccess } from './api_client.js';
 import { CarController } from './car_controls.js';
+import { loadSounds, startMusic, playSoundEffect, startThinkingSound, stopThinkingSound } from './audio_manager.js';
 
 // --- GLOBAL HATA YAKALAMA ---
-window.onerror = function(msg, url, lineNo, columnNo, error) {
+window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.error('❌ GLOBAL HATA:', msg, 'Satır:', lineNo);
     return false;
 };
@@ -48,12 +49,13 @@ if (controlsHint) controlsHint.style.display = 'none';
 
 // --- BAŞLAT BUTONU ---
 if (startBtn) {
-    startBtn.addEventListener('click', async function(e) {
+    startBtn.addEventListener('click', async function (e) {
         e.preventDefault();
         e.stopPropagation();
 
         console.log("🎮 ========== OYNA BUTONUNA TIKLANDI ==========");
 
+        startMusic();
         if (startScreen) startScreen.style.display = 'none';
         if (loadingScreen) loadingScreen.style.display = 'flex';
 
@@ -71,6 +73,8 @@ if (startBtn) {
 // --- OYUN BAŞLATMA ---
 async function initGameWorld() {
     console.log("🚀 initGameWorld() başladı");
+
+    loadSounds();
 
     try {
         if (loadingMessage) loadingMessage.innerText = "Araba Hazırlanıyor...";
@@ -115,7 +119,7 @@ async function initGameWorld() {
         userAnswers = [];
 
         carController.start();
-
+        startMusic();
         console.log("🏁 ========== OYUN BAŞLADI ==========");
 
     } catch (error) {
@@ -123,6 +127,16 @@ async function initGameWorld() {
         alert("Hata oluştu: " + error.message);
     } finally {
         if (loadingScreen) loadingScreen.style.display = 'none';
+    }
+}
+function updateLight() {
+    if (carController && sunLight) {
+        const carPos = carController.getPosition();
+
+        // Işık arabayı Z ekseninde takip etsin, ama mesafesini korusun
+        sunLight.position.z = carPos.z + 50;
+        sunLight.target.position.z = carPos.z; // Işığın hedefi de araba olsun
+        sunLight.target.updateMatrixWorld();
     }
 }
 
@@ -140,6 +154,8 @@ function checkCollisions() {
 
             if (carPos.x > 3) selectedAnswer = "Evet";
             else if (carPos.x < -3) selectedAnswer = "Hayır";
+
+            playSoundEffect('answer');
 
             console.log(`✅ Soru ${userAnswers.length + 1}: ${zone.questionText} -> ${selectedAnswer}`);
             userAnswers.push(formatAnswer(zone.questionText, selectedAnswer));
@@ -168,40 +184,45 @@ function updateUI(questionIndex) {
 // --- OYUN BİTİŞİ ---
 async function finishGame() {
     console.log("🏁 ========== finishGame() ÇAĞRILDI ==========");
-    console.log("📊 Toplanan cevap sayısı:", userAnswers.length);
 
-    // Durumu hemen değiştir
     isGameOver = true;
     isPredicting = true;
 
     if (carController) {
         carController.stop();
-        console.log("🛑 Araba durduruldu");
     }
 
     if (questionTextUI) questionTextUI.innerText = "🧠 Zihin Okunuyor...";
 
+    // --- YENİ: Düşünme Sesini Başlat ---
+    startThinkingSound();
+    // -----------------------------------
+
     try {
         console.log("🔄 API'ye istek gönderiliyor...");
+
+        // Bu işlem 3-5 saniye sürer, bu arada ses çalacak
         const result = await getPrediction(userAnswers);
-        console.log("🤖 API Sonucu:", result);
+
+        // --- YENİ: Sonuç Geldi, Sesi Durdur ---
+        stopThinkingSound();
+        // -------------------------------------
 
         if (result && result.prediction) {
             lastPrediction = {
                 prediction: result.prediction,
                 url: result.url
             };
-
-            console.log("🎯 Tahmin:", result.prediction);
-            console.log("📺 showPredictionResult çağrılıyor...");
-
             showPredictionResult(result.prediction, result.url);
         } else {
-            console.error("❌ API sonucu geçersiz:", result);
             showGameEndOverlay("Hata: Tahmin alınamadı!");
         }
     } catch (error) {
         console.error("❌ finishGame hatası:", error);
+
+        // Hata olsa bile sesi susturmayı unutma!
+        stopThinkingSound();
+
         showGameEndOverlay("Hata: " + error.message);
     }
 }
@@ -276,7 +297,7 @@ function showPredictionResult(prediction, url) {
     // 3D Görüntüle
     const view3dBtn = document.getElementById('btn-view-3d');
     if (view3dBtn) {
-        view3dBtn.onclick = function(e) {
+        view3dBtn.onclick = function (e) {
             e.preventDefault();
             console.log("👁️ 3D Görüntüle tıklandı");
             window.open(url, '_blank');
@@ -286,10 +307,10 @@ function showPredictionResult(prediction, url) {
     // Doğru Bildin
     const correctBtn = document.getElementById('btn-correct');
     if (correctBtn) {
-        correctBtn.onclick = async function(e) {
+        correctBtn.onclick = async function (e) {
             e.preventDefault();
             console.log("✅ DOĞRU BİLDİN tıklandı");
-
+            playSoundEffect('win');
             try {
                 const response = await fetch(url);
                 const htmlContent = await response.text();
@@ -308,7 +329,7 @@ function showPredictionResult(prediction, url) {
     // Yanlış - 5 Soru Daha
     const wrongBtn = document.getElementById('btn-wrong');
     if (wrongBtn) {
-        wrongBtn.onclick = async function(e) {
+        wrongBtn.onclick = async function (e) {
             e.preventDefault();
             console.log("❌ YANLIŞ tıklandı, 5 yeni soru isteniyor...");
 
@@ -331,6 +352,7 @@ function showPredictionResult(prediction, url) {
         };
     }
 
+    attachButtonSounds();
     console.log("📺 ========== showPredictionResult TAMAMLANDI ==========");
 }
 
@@ -342,20 +364,6 @@ function showGameEndOverlay(message) {
 
     const overlay = document.createElement('div');
     overlay.id = 'game-end-overlay';
-    overlay.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(0, 0, 0, 0.95) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-        z-index: 99999 !important;
-        pointer-events: all !important;
-    `;
 
     overlay.innerHTML = `
         <h2 style="color: #00ffcc; font-size: 36px; margin-bottom: 30px; text-align: center;">${message}</h2>
@@ -375,12 +383,14 @@ function showGameEndOverlay(message) {
 
     const replayBtn = document.getElementById('replay-btn');
     if (replayBtn) {
-        replayBtn.onclick = function(e) {
+        replayBtn.onclick = function (e) {
             e.preventDefault();
             console.log("🔄 Yeniden oyna tıklandı");
             location.reload();
         };
     }
+
+    attachButtonSounds();
 }
 
 // --- OVERLAY TEMİZLEME ---
@@ -421,7 +431,7 @@ function addNewQuestions(newQuestions) {
     // Arabayı yeni soruların önüne konumlandır
     const nextZone = activeZones.find(z => !z.passed);
     if (nextZone && carController) {
-        carController.carMesh.position.z = nextZone.z + 50;
+        carController.carMesh.position.z = nextZone.z + 100;
     }
 
     // Oyunu tekrar başlat
@@ -443,6 +453,26 @@ function updateCamera() {
     }
 }
 
+function attachButtonSounds() {
+    const buttons = document.querySelectorAll('button');
+    
+    buttons.forEach(btn => {
+        // Eğer daha önce ses eklenmediyse ekle
+        if (!btn.dataset.soundAttached) {
+            
+            btn.addEventListener('click', () => {
+                // "Doğru Bildin" butonu (btn-correct) HARİÇ diğerlerinde çal
+                // Çünkü onun kendi 'win' sesi zaten var.
+                if (btn.id !== 'btn-correct') {
+                    playSoundEffect('click');
+                }
+            });
+
+            btn.dataset.soundAttached = "true"; 
+        }
+    });
+}
+
 // --- ANA DÖNGÜ ---
 function animate() {
     requestAnimationFrame(animate);
@@ -455,8 +485,10 @@ function animate() {
     }
 
     updateCamera();
+    updateLight();
     renderer.render(scene, camera);
 }
 
 animate();
+attachButtonSounds();
 console.log("🎬 Animasyon döngüsü başlatıldı");

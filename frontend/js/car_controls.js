@@ -59,10 +59,6 @@ export class CarController {
         // 2. Şerit Değiştirme (Linear Interpolation)
         // Arabanın mevcut X'ini hedefe doğru kaydır
         this.carMesh.position.x += (this.targetX - this.carMesh.position.x) * this.laneSwitchSpeed * deltaTime;
-
-        // --- DÜZELTME: Tilt (Yatma) efektini kapattık ---
-        // Araba modeli ters olduğu için bu efekt arabayı toprağa sokuyor olabilir.
-        // Şimdilik araba dümdüz kalsın.
         this.carMesh.rotation.z = 0; 
     }
 

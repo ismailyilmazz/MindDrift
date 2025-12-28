@@ -13,7 +13,7 @@ else:
     print(f"✅ API Key yüklendi: {API_KEY[:10]}...")
 
 genai.configure(api_key=API_KEY)
-MODEL_NAME = "gemini-2.5-pro" 
+MODEL_NAME = "gemini-2.5-flash" 
 
 def generate_prediction_and_code(answers: list):
     """
@@ -62,10 +62,8 @@ CEVAP (sadece nesne adı):"""
         - Animasyon: Nesne kendi etrafında yavaşça dönsün.
         - Hata Yönetimi: catch bloğunda hatayı ekrana bas: document.body.innerHTML = `<h1 style="color:red">${{e.message}}</h1>`;
 
-        BUTONLAR (SOL ÜST):
-        1. [DOĞRU BİLDİN!] -> ID: 'btn-confirm' -> window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
-        2. [YANLIŞ - 5 SORU DAHA] -> ID: 'btn-retry' -> window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
-        3. [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+        BUTON (SOL ÜST):
+        Sadece 1 buton olacak: [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
 
         ÇIKTI FORMATI:
         Sadece saf HTML kodu ver. Markdown (```html) kullanma.

@@ -53,78 +53,169 @@ export function createLighting() {
     scene.add(sunLight.target);
 }
 
+
+let environmentObjects = {
+    road: null,
+    leftCurb: null,
+    rightCurb: null,
+    ground: null
+};
+
+const ROAD_WIDTH = 23;
+const CURB_WIDTH = 16;
+const CURB_HEIGHT = 1.2;
+const INITIAL_LENGTH = 15000;
+
 export function createEnvironment() {
     // 1. ANA YOL (Arabanın gittiği şerit - Koyu Lacivert)
-    const roadWidth = 23; 
-    const roadGeometry = new THREE.PlaneGeometry(roadWidth, 5000); 
-    const roadMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x16213e, 
-        roughness: 0.1,   
-        metalness: 0.5    
+    const roadGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, INITIAL_LENGTH);
+    const roadMaterial = new THREE.MeshStandardMaterial({
+        color: 0x16213e,
+        roughness: 0.1,
+        metalness: 0.5
     });
     const road = new THREE.Mesh(roadGeometry, roadMaterial);
     road.rotation.x = -Math.PI / 2;
-    road.position.z = -2000; 
+    road.position.z = -INITIAL_LENGTH / 2;
     road.receiveShadow = true;
     scene.add(road);
+    environmentObjects.road = road;
 
-    // --- GENİŞLETİLMİŞ VE YÜKSEK KALDIRIMLAR ---
-    const curbWidth = 16; 
-    const curbHeight = 1.2; // YENİ: Kaldırımın yüksekliği/kalınlığı
-    
-    // Konum Hesaplaması:
-    const offset = (roadWidth / 2) + (curbWidth / 2);
+ 
+    const offset = (ROAD_WIDTH / 2) + (CURB_WIDTH / 2);
 
-    // YENİ: PlaneGeometry yerine BoxGeometry kullanıyoruz (Genişlik, Yükseklik, Uzunluk)
-    const curbGeometry = new THREE.BoxGeometry(curbWidth, curbHeight, 5000);
-    
-    const curbMaterial = new THREE.MeshStandardMaterial({ 
+    const curbGeometry = new THREE.BoxGeometry(CURB_WIDTH, CURB_HEIGHT, INITIAL_LENGTH);
+
+    const curbMaterial = new THREE.MeshStandardMaterial({
         color: 0x800020, // Bordo/Kırmızı tonu
-        roughness: 0.9, 
+        roughness: 0.9,
         metalness: 0.1
     });
 
     // SOL KALDIRIM
     const leftCurb = new THREE.Mesh(curbGeometry, curbMaterial);
-    leftCurb.position.z = -2000;
-    leftCurb.position.x = -offset; 
-    // YENİ: Kutunun merkezi ortada olduğu için, yarısı kadar yukarı kaldırıyoruz ki yere bassın
-    leftCurb.position.y = curbHeight / 2; 
-    leftCurb.castShadow = false;    // YENİ: Yola gölge düşürsün
+    leftCurb.position.z = -INITIAL_LENGTH / 2;
+    leftCurb.position.x = -offset;
+    leftCurb.position.y = CURB_HEIGHT / 2;
+    leftCurb.castShadow = false;
     leftCurb.receiveShadow = true;
     scene.add(leftCurb);
+    environmentObjects.leftCurb = leftCurb;
 
     // SAĞ KALDIRIM
     const rightCurb = new THREE.Mesh(curbGeometry, curbMaterial);
-    // rightCurb.rotation.x iptal edildi
-    rightCurb.position.z = -2000;
-    rightCurb.position.x = offset; 
-    rightCurb.position.y = curbHeight / 2; // YENİ: Yükseklik ayarı
-    rightCurb.castShadow = false;     // YENİ: Yola gölge düşürsün
+    rightCurb.position.z = -INITIAL_LENGTH / 2;
+    rightCurb.position.x = offset;
+    rightCurb.position.y = CURB_HEIGHT / 2;
+    rightCurb.castShadow = false;
     rightCurb.receiveShadow = true;
     scene.add(rightCurb);
-    // ----------------------------------------
+    environmentObjects.rightCurb = rightCurb;
 
     // 2. ZEMİN (En alttaki sonsuz gri alan)
-    const groundGeometry = new THREE.PlaneGeometry(10000, 10000); 
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
+    const groundGeometry = new THREE.PlaneGeometry(10000, INITIAL_LENGTH + 5000);
+    const groundMaterial = new THREE.MeshStandardMaterial({
         color: 0x808080,
-        roughness: 1,    
-        metalness: 0     
+        roughness: 1,
+        metalness: 0
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.5; 
+    ground.position.y = -0.5;
+    ground.position.z = -INITIAL_LENGTH / 2;
     ground.receiveShadow = true;
-    
     scene.add(ground);
+    environmentObjects.ground = ground;
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
+}
+
+
+export function extendEnvironment(newEndZ) {
+    // newEndZ: Yeni soruların en uzak Z pozisyonu (negatif değer)
+    // Güvenlik payı ekle
+    const requiredLength = Math.abs(newEndZ) + 1000;
+
+    const offset = (ROAD_WIDTH / 2) + (CURB_WIDTH / 2);
+
+    // Mevcut objeleri kaldır
+    if (environmentObjects.road) {
+        scene.remove(environmentObjects.road);
+        environmentObjects.road.geometry.dispose();
+    }
+    if (environmentObjects.leftCurb) {
+        scene.remove(environmentObjects.leftCurb);
+        environmentObjects.leftCurb.geometry.dispose();
+    }
+    if (environmentObjects.rightCurb) {
+        scene.remove(environmentObjects.rightCurb);
+        environmentObjects.rightCurb.geometry.dispose();
+    }
+    if (environmentObjects.ground) {
+        scene.remove(environmentObjects.ground);
+        environmentObjects.ground.geometry.dispose();
+    }
+
+    // Yeni uzunlukta yol oluştur
+    const newRoadGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, requiredLength);
+    const roadMaterial = new THREE.MeshStandardMaterial({
+        color: 0x16213e,
+        roughness: 0.1,
+        metalness: 0.5
+    });
+    const newRoad = new THREE.Mesh(newRoadGeometry, roadMaterial);
+    newRoad.rotation.x = -Math.PI / 2;
+    newRoad.position.z = -requiredLength / 2;
+    newRoad.receiveShadow = true;
+    scene.add(newRoad);
+    environmentObjects.road = newRoad;
+
+    // Yeni uzunlukta kaldırımlar
+    const newCurbGeometry = new THREE.BoxGeometry(CURB_WIDTH, CURB_HEIGHT, requiredLength);
+    const curbMaterial = new THREE.MeshStandardMaterial({
+        color: 0x800020,
+        roughness: 0.9,
+        metalness: 0.1
+    });
+
+    const newLeftCurb = new THREE.Mesh(newCurbGeometry, curbMaterial);
+    newLeftCurb.position.z = -requiredLength / 2;
+    newLeftCurb.position.x = -offset;
+    newLeftCurb.position.y = CURB_HEIGHT / 2;
+    newLeftCurb.castShadow = false;
+    newLeftCurb.receiveShadow = true;
+    scene.add(newLeftCurb);
+    environmentObjects.leftCurb = newLeftCurb;
+
+    const newRightCurb = new THREE.Mesh(newCurbGeometry.clone(), curbMaterial);
+    newRightCurb.position.z = -requiredLength / 2;
+    newRightCurb.position.x = offset;
+    newRightCurb.position.y = CURB_HEIGHT / 2;
+    newRightCurb.castShadow = false;
+    newRightCurb.receiveShadow = true;
+    scene.add(newRightCurb);
+    environmentObjects.rightCurb = newRightCurb;
+
+    // Yeni uzunlukta zemin
+    const newGroundGeometry = new THREE.PlaneGeometry(10000, requiredLength + 5000);
+    const groundMaterial = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        roughness: 1,
+        metalness: 0
+    });
+    const newGround = new THREE.Mesh(newGroundGeometry, groundMaterial);
+    newGround.rotation.x = -Math.PI / 2;
+    newGround.position.y = -0.5;
+    newGround.position.z = -requiredLength / 2;
+    newGround.receiveShadow = true;
+    scene.add(newGround);
+    environmentObjects.ground = newGround;
+
+    console.log(`🛣️ Çevre uzatıldı: ${requiredLength} birim`);
 }
 
 export function createDecisionWalls(scene, zPosition) {

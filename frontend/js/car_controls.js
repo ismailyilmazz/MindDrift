@@ -11,7 +11,7 @@ export class CarController {
         this.currentLaneIndex = 1; 
         this.targetX = this.lanes[1]; // Hedef 0
 
-        this.forwardSpeed = 50.0; // Hızı biraz artırdım, akıcı olsun
+        this.forwardSpeed = 30.0; // Hızı biraz artırdım, akıcı olsun
         this.laneSwitchSpeed = 10.0; 
         this.isGameRunning = false;
 

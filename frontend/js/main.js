@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable, createCar, sunLight } from './scene.js';
+import { scene, camera, renderer, createLighting, createEnvironment, createDecisionWalls, createQuestionTable, createCar, sunLight, extendEnvironment } from './scene.js';
 import { startGame, formatAnswer, getPrediction, continueGame, confirmSuccess } from './api_client.js';
 import { CarController } from './car_controls.js';
 import { loadSounds, startMusic, playSoundEffect, startThinkingSound, stopThinkingSound } from './audio_manager.js';
@@ -412,9 +412,12 @@ function addNewQuestions(newQuestions) {
     const lastZone = activeZones[activeZones.length - 1];
     const startZ = lastZone ? lastZone.z - DISTANCE_BETWEEN_QUESTIONS : -150;
 
+    let furthestZ = startZ;
+
     newQuestions.forEach((q, index) => {
         gameQuestions.push(q);
         const zPosition = startZ - (index * DISTANCE_BETWEEN_QUESTIONS);
+        furthestZ = zPosition; // En uzak Z pozisyonunu takip et
 
         createQuestionTable(scene, zPosition + 20, q.text);
         const walls = createDecisionWalls(scene, zPosition);
@@ -427,6 +430,10 @@ function addNewQuestions(newQuestions) {
             walls: walls
         });
     });
+
+    // --- YENİ: Çevreyi uzat ---
+    extendEnvironment(furthestZ);
+    // --------------------------
 
     // Arabayı yeni soruların önüne konumlandır
     const nextZone = activeZones.find(z => !z.passed);

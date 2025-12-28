@@ -20,58 +20,30 @@
 
     <div id="game-ui">
         <!-- BAŞLANGIÇ EKRANI -->
-        <div id="start-screen" class="screen active">
-            <div class="start-container">
-                <h1>🎮 MindDrift</h1>
-                <p>Oyun Başlat</p>
-                <button onclick="window.startGameSession()" class="btn-large btn-play">▶ OYNA</button>
-                <button class="btn-large btn-exit">🚪 ÇIKIŞ</button>
+        <div id="start-screen">
+            <h1>MindDrift</h1>
+            <p>Bir nesne düşün ve sorulara cevap vererek arabayı sür!</p>
+            <button id="start-btn">OYNA</button>
+            <div id="instructions">
+                <p><b>A / Sol Ok:</b> HAYIR</p>
+                <p><b>D / Sağ Ok:</b> EVET</p>
+                <p><b>Ortada Kal:</b> KISMEN</p>
             </div>
         </div>
 
-        <!-- OYUN EKRANI -->
-        <div id="game-screen" class="screen">
-            <div id="question-container">
-                <h2 id="question-text">Oyun Başlatılıyor...</h2>
-                <p id="progress-text">Soru: 0/15</p>
-            </div>
-
-            <div id="loading-screen">
-                <h1>MindDrift</h1>
-                <p id="loading-message">Motorlar Isınıyor...</p>
-                <div class="loader"></div>
-            </div>
-
-            <div id="controls-hint">
-                <p>Sürüş: <b>W, A, S, D</b> veya <b>Yön Tuşları</b></p>
-            </div>
+        <div id="question-container">
+            <h2 id="question-text">Oyun Başlatılıyor...</h2>
+            <p id="progress-text">Soru: 0/15</p>
         </div>
 
-        <!-- TAHMİN VE DOĞRULAMA MODAL -->
-        <div id="prediction-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="prediction-title">Tahmin: </h2>
-                    <button class="close-modal" onclick="window.closePredictionOnly()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <iframe id="prediction-iframe" frameborder="0"></iframe>
-                </div>
-                <div class="modal-footer">
-                    <button onclick="window.confirmCorrect()" class="btn-correct">✓ DOĞRU!</button>
-                    <button onclick="window.confirmWrong()" class="btn-wrong">✗ YANLIŞ</button>
-                </div>
-            </div>
+        <div id="loading-screen" style="display: none;">
+            <h1>MindDrift</h1>
+            <p id="loading-message">Motorlar Isınıyor...</p>
+            <div class="loader"></div>
         </div>
 
-        <!-- OYUN SONU EKRANI -->
-        <div id="end-screen" class="screen">
-            <div class="end-container">
-                <h1>🎉 Oyun Bitti!</h1>
-                <p id="end-message">Tebrikler!</p>
-                <button onclick="window.backToStart()" class="btn-large btn-restart">⏮ BAŞA DÖN</button>
-                <button onclick="window.startGameSession()" class="btn-large btn-play">▶ YENİ OYUN</button>
-            </div>
+        <div id="controls-hint">
+            <p>Sürüş: <b>A, D</b> veya <b>Yön Tuşları</b></p>
         </div>
     </div>
 

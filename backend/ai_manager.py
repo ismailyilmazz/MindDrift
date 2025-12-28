@@ -13,7 +13,7 @@ else:
     print(f"✅ API Key yüklendi: {API_KEY[:10]}...")
 
 genai.configure(api_key=API_KEY)
-MODEL_NAME = "gemini-2.5-pro"  # Doğru model
+MODEL_NAME = "gemini-2.5-pro" 
 
 def generate_prediction_and_code(answers: list):
     """
@@ -38,40 +38,43 @@ CEVAP (sadece nesne adı):"""
         prediction = guess_res.text.strip()
         print(f"✅ AI Tahmini: {prediction}")
 
-        # ADIM 2: HTML Kod Üret
-        code_prompt = f"""Sana "{prediction}" nesnesini temsil eden bir Three.js 3D sahne HTML kodu yazacaksın.
-
-KURALLAR:
-1. Sadece HTML döndür, Markdown kullanma
-2. Import map'i kullan:
-```
-<script type="importmap">
-{{"imports": {{"three": "https://unpkg.com/three@r128/build/three.module.js"}}}}
-</script>
-```
-3. Basit geometriler kullan (Box, Sphere, Cylinder)
-4. Nesneyi rotate et (animasyon)
-5. İyi aydınlatma ekle
-6. Siyah arka plan
-7. Hata mesajlarını ekrana bas
-
-HTML KODUNUSadece HTML ver:"""
-
-        print("📝 HTML Kodu üretiliyor...")
-        code_res = model.generate_content(code_prompt)
-        html_code = code_res.text.strip()
+        code_prompt = f"""
+        Sen uzman bir Three.js geliştiricisisin.
+        HEDEF: "{prediction}" nesnesini temsil eden 3D bir sahne oluştur.
         
-        # Markdown markers'ı kaldır
-        if html_code.startswith("```html"):
-            html_code = html_code[7:]
-        if html_code.startswith("```"):
-            html_code = html_code[3:]
-        if html_code.endswith("```"):
-            html_code = html_code[:-3]
-        html_code = html_code.strip()
+        KRİTİK JAVASCRIPT KURALLARI (BU SIRAYI BOZMA):
+        1. HTML <head> kısmına IMPORT MAP ekle.
+        2. <script type="module"> bloğunu aç.
+        3. EN ÜSTE IMPORTLARI YAZ (Bunlar try-catch içinde OLAMAZ!):
+           import * as THREE from 'three';
+           import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
+        4. Importlardan SONRA 'try {{ ... }} catch(e) {{ ... }}' bloğunu başlat.
+        5. Tüm sahne kurulumunu (Scene, Camera, Renderer, Object) bu try bloğunun içine yaz.
         
-        print(f"✅ HTML Kodu Oluşturuldu ({len(html_code)} karakter)")
-        return {"prediction": prediction, "html_code": html_code}
+        TEKNİK DETAYLAR:
+        - Import Map:
+           <script type="importmap">
+           {{ "imports": {{ "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" }} }}
+           </script>
+        - Sahne Arkaplanı: scene.background = new THREE.Color(0x333333);
+        - Işıklar: AmbientLight ve DirectionalLight MUTLAKA ekle.
+        - Nesne: "{prediction}" nesnesini basit geometrilerle (Group, Box, Sphere, Cylinder) benzeterek çiz. External model yükleme.
+        - Animasyon: Nesne kendi etrafında yavaşça dönsün.
+        - Hata Yönetimi: catch bloğunda hatayı ekrana bas: document.body.innerHTML = `<h1 style="color:red">${{e.message}}</h1>`;
+
+        BUTONLAR (SOL ÜST):
+        1. [DOĞRU BİLDİN!] -> ID: 'btn-confirm' -> window.opener.postMessage({{type: 'CONFIRMED', prediction: '{prediction}', html: document.documentElement.outerHTML}}, '*'); window.close();
+        2. [YANLIŞ - 5 SORU DAHA] -> ID: 'btn-retry' -> window.opener.postMessage({{type: 'RETRY_5_QUESTIONS'}}, '*'); window.close();
+        3. [ÇIKIŞ] -> ID: 'btn-quit' -> window.close();
+
+        ÇIKTI FORMATI:
+        Sadece saf HTML kodu ver. Markdown (```html) kullanma.
+        """
+        
+        code_res = await model.generate_content_async(code_prompt)
+        clean_code = code_res.text.replace("```html", "").replace("```", "").strip()
+        
+        return {"prediction": prediction, "html_code": clean_code}
 
     except Exception as e:
         print(f"❌ AI Hatası: {e}")

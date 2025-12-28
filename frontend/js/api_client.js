@@ -7,10 +7,10 @@
 const BASE_URL = "http://localhost:8000"; 
 
 /**
- * 1. OYUNU BAŞLAT(Başlat butonuna tıklandığında)
- * Sabit 15 soruyu backend'den çeker.
- * @returns {Promise<Array>} Sorular listesi örn: [{id: 1, text: "Canlı mı?"}, ...]
+ * GAME START
+ * @returns {Promise<Array>}
  */
+
 export async function startGame() {
     console.log("📡 Backend'e bağlanılıyor...");
     try {
@@ -27,10 +27,9 @@ export async function startGame() {
 }
 
 /**
- * 2. TAHMİN İSTE (OYUN SONU)
- * Toplanan cevapları gönderir, AI'ın tahminini ve Three.js kodunu alır.
- * @param {Array} answers - Kullanıcı cevapları dizisi
- * @returns {Promise<Object>} { prediction: "Araba", url: "..." }
+ * GET PREDICTION
+ * @param {Array} answers
+ * @returns {Promise<Object>} 
  */
 export async function getPrediction(answers) {
     console.log("🧠 AI Tahmin yürütüyor...");
@@ -53,10 +52,9 @@ export async function getPrediction(answers) {
 }
 
 /**
- * 3. DEVAM ET (BİLEMEDİN SENARYOSU)
- * Kullanıcı "Yanlış, 5 Soru Daha Sor" dediğinde çalışır.
- * @param {Array} currentAnswers - Şu anki cevaplar
- * @returns {Promise<Array>} Yeni 5 soru
+ * CONTINUE GAME
+ * @param {Array} currentAnswers 
+ * @returns {Promise<Array>}
  */
 export async function continueGame(currentAnswers) {
     console.log("🔄 Yeni sorular isteniyor...");
@@ -78,24 +76,21 @@ export async function continueGame(currentAnswers) {
 }
 
 /**
- * 4. CEVAP FORMATLAYICI (ÇOK ÖNEMLİ!)
- * Araba kapıya çarptığında MUTLAKA bu fonksiyonu kullanın.
- * * @param {string} questionText - O anki sorunun metni (örn: "Canlı mı?")
- * @param {string} answerText - Seçilen kapı (örn: "Evet")
- * @returns {string} Formatlanmış veri (örn: "Canlı mı?: Evet")
+ * FORMAT ANSWER
+ * * @param {string} questionText
+ * @param {string} answerText
+ * @returns {string}
  */
 export function formatAnswer(questionText, answerText) {
     return `${questionText}: ${answerText}`;
 }
 
 /**
- * 5. BAŞARI ONAYLA (DOĞRU TAHMİN)
- * Kullanıcı "Doğru Bildin!" dediğinde çalışır.
- * Tahmini veritabanına kalıcı olarak kaydeder.
- * @param {Array} answers - Tüm cevaplar
- * @param {string} prediction - AI'ın tahmini
- * @param {string} htmlContent - Üretilen HTML kodu
- * @returns {Promise<Object>} { status: "saved" }
+ * CONFIRM SUCCESS
+ * @param {Array} answers
+ * @param {string} prediction
+ * @param {string} htmlContent
+ * @returns {Promise<Object>}
  */
 export async function confirmSuccess(answers, prediction, htmlContent) {
     console.log("💾 Başarılı tahmin kaydediliyor...");

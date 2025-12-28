@@ -1,21 +1,18 @@
-// car_controls.js dosyasının tamamını bununla değiştir:
-
 export class CarController {
     constructor(carMesh) {
         this.carMesh = carMesh;
         
-        // Şeritler: Sol(-7.5) | Orta(0) | Sağ(7.5)
+        // Lines: Left(-7.5) | Center(0) | Right(7.5)
         this.lanes = [-7.5, 0, 7.5]; 
         
-        // BAŞLANGIÇ AYARI: Kesinlikle ortadan (Index 1) başlatıyoruz.
+        // STARTING POSITION: Always start from center
         this.currentLaneIndex = 1; 
-        this.targetX = this.lanes[1]; // Hedef 0
+        this.targetX = this.lanes[1];
 
-        this.forwardSpeed = 30.0; // Hızı biraz artırdım, akıcı olsun
+        this.forwardSpeed = 30.0;
         this.laneSwitchSpeed = 10.0; 
         this.isGameRunning = false;
 
-        // Başlangıçta arabayı hemen orta şeride ışınla ki kayarak gelmesin
         if (this.carMesh) {
             this.carMesh.position.x = 0;
         }
@@ -23,6 +20,7 @@ export class CarController {
         window.addEventListener('keydown', (e) => this.handleInput(e));
     }
 
+    // Left-Right Movement Input
     handleInput(event) {
         if (!this.isGameRunning) return;
 
@@ -46,30 +44,34 @@ export class CarController {
         }
     }
 
+    // Update Target X based on current lane
     updateTargetLane() {
         this.targetX = this.lanes[this.currentLaneIndex];
     }
 
+    // Update Car Position
     update(deltaTime) {
         if (!this.isGameRunning || !this.carMesh) return;
 
-        // 1. İleri Hareket
+        // Forward Movement
         this.carMesh.position.z -= this.forwardSpeed * deltaTime;
 
-        // 2. Şerit Değiştirme (Linear Interpolation)
-        // Arabanın mevcut X'ini hedefe doğru kaydır
+        // Lateral Movement
         this.carMesh.position.x += (this.targetX - this.carMesh.position.x) * this.laneSwitchSpeed * deltaTime;
         this.carMesh.rotation.z = 0; 
     }
 
+    // Stop the car
     stop() {
         this.isGameRunning = false;
     }
 
+    // Start the car
     start() {
         this.isGameRunning = true;
     }
-    
+   
+    // Get current position
     getPosition() {
         return this.carMesh.position;
     }

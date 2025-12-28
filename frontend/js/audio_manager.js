@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { listener } from './scene.js';
 
+// Sound Manager
 const soundManager = {
     bgm: null,
     answer: null,
@@ -14,7 +15,8 @@ let bgmRequested = false;
 const audioLoader = new THREE.AudioLoader();
 
 export function loadSounds() {
-    // 1. Arka Plan Müziği
+
+    // Background Music
     const bgmSound = new THREE.Audio(listener);
     audioLoader.load('assets/sounds/bgm.mp3', function (buffer) {
         bgmSound.setBuffer(buffer);
@@ -27,7 +29,7 @@ export function loadSounds() {
         }
     });
 
-    // 2. Cevap Verme Sesi
+    // Answer Sound
     const answerSound = new THREE.Audio(listener);
     audioLoader.load('assets/sounds/answer.mp3', function (buffer) {
         answerSound.setBuffer(buffer);
@@ -36,15 +38,16 @@ export function loadSounds() {
         soundManager.answer = answerSound;
     });
 
-    // 3. YENİ: Düşünme/Bekleme Sesi (Thinking)
+    // Thinking Sound
     const thinkingSound = new THREE.Audio(listener);
     audioLoader.load('assets/sounds/thinking.mp3', function (buffer) {
         thinkingSound.setBuffer(buffer);
-        thinkingSound.setLoop(true); // Sürekli çalsın (sonuç gelene kadar)
-        thinkingSound.setVolume(1.0); // Biraz baskın olsun
+        thinkingSound.setLoop(true);
+        thinkingSound.setVolume(1.0);
         soundManager.thinking = thinkingSound;
     });
 
+    // Win Sound
     const winSound = new THREE.Audio(listener);
     audioLoader.load('assets/sounds/win.mp3', function (buffer) {
         winSound.setBuffer(buffer);
@@ -53,6 +56,7 @@ export function loadSounds() {
         soundManager.win = winSound;
     });
 
+    // Click Sound
     const clickSound = new THREE.Audio(listener);
     audioLoader.load('assets/sounds/click.mp3', function(buffer) {
         clickSound.setBuffer(buffer);
@@ -62,23 +66,26 @@ export function loadSounds() {
     });
 }
 
+// Start Background Music
 export function startMusic() {
-    bgmRequested = true; // "Müzik çalsın istiyoruz" diye not et
+    bgmRequested = true;
 
-    // YENİ: Tarayıcının ses motoru uyuyor mu? Uyuyorsa dürtüp uyandıralım.
+    // Continue if the audio context is suspended
     if (listener.context.state === 'suspended') {
         listener.context.resume().then(() => {
             console.log("🔊 Ses motoru uyandırıldı.");
         });
     }
 
-    // Dosya zaten hazırsa hemen çal
+    // Play BGM if loaded
     if (soundManager.bgm && !soundManager.bgm.isPlaying) {
         soundManager.bgm.play();
     }
 }
 
+// Play Needed Sound Effect
 export function playSoundEffect(type) {
+
     if (type === 'answer' && soundManager.answer) {
         if (soundManager.answer.isPlaying) soundManager.answer.stop();
         soundManager.answer.play();
@@ -95,6 +102,7 @@ export function playSoundEffect(type) {
     }
 }
 
+// Thinking Sound Start
 export function startThinkingSound() {
     if (listener.context.state === 'suspended') {
         listener.context.resume();
@@ -109,6 +117,7 @@ export function startThinkingSound() {
     }
 }
 
+// Thinking Sound Stop
 export function stopThinkingSound() {
     if (soundManager.thinking && soundManager.thinking.isPlaying) {
         soundManager.thinking.stop();

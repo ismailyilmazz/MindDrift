@@ -25,17 +25,16 @@ export function createLighting() {
     const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x101010, 0.8);
     scene.add(hemisphereLight);
 
-    sunLight = new THREE.DirectionalLight(0xffffff, 2.0); // Şiddeti artırdık
+    sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
 
-    // Konumu: Arabanın (0,0,-40) biraz gerisinde ve yukarısında
     sunLight.position.set(30, 15, 10);
     sunLight.castShadow = true;
 
-    // Gölge kalitesi
+    // Shadow Size
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
 
-    // --- GÖLGE KUTUSU (Bu kutunun dışına gölge düşmez) ---
+    // Shadow Box
     const d = 100;
     sunLight.shadow.camera.left = -d;
     sunLight.shadow.camera.right = d;
@@ -48,7 +47,7 @@ export function createLighting() {
 
     scene.add(sunLight);
 
-    // Hedefi arabaya doğru ayarla
+    // Towards Car
     sunLight.target.position.set(0, 0, -50);
     scene.add(sunLight.target);
 }
@@ -67,7 +66,7 @@ const CURB_HEIGHT = 1.2;
 const INITIAL_LENGTH = 15000;
 
 export function createEnvironment() {
-    // 1. ANA YOL (Arabanın gittiği şerit - Koyu Lacivert)
+    // Main Road
     const roadGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, INITIAL_LENGTH);
     const roadMaterial = new THREE.MeshStandardMaterial({
         color: 0x16213e,
@@ -87,12 +86,12 @@ export function createEnvironment() {
     const curbGeometry = new THREE.BoxGeometry(CURB_WIDTH, CURB_HEIGHT, INITIAL_LENGTH);
 
     const curbMaterial = new THREE.MeshStandardMaterial({
-        color: 0x800020, // Bordo/Kırmızı tonu
+        color: 0x800020,
         roughness: 0.9,
         metalness: 0.1
     });
 
-    // SOL KALDIRIM
+    // Left Curb
     const leftCurb = new THREE.Mesh(curbGeometry, curbMaterial);
     leftCurb.position.z = -INITIAL_LENGTH / 2;
     leftCurb.position.x = -offset;
@@ -102,7 +101,7 @@ export function createEnvironment() {
     scene.add(leftCurb);
     environmentObjects.leftCurb = leftCurb;
 
-    // SAĞ KALDIRIM
+    // Right Curb
     const rightCurb = new THREE.Mesh(curbGeometry, curbMaterial);
     rightCurb.position.z = -INITIAL_LENGTH / 2;
     rightCurb.position.x = offset;
@@ -112,7 +111,7 @@ export function createEnvironment() {
     scene.add(rightCurb);
     environmentObjects.rightCurb = rightCurb;
 
-    // 2. ZEMİN (En alttaki sonsuz gri alan)
+    // Space Ground
     const groundGeometry = new THREE.PlaneGeometry(10000, INITIAL_LENGTH + 5000);
     const groundMaterial = new THREE.MeshStandardMaterial({
         color: 0x808080,
@@ -136,13 +135,12 @@ export function createEnvironment() {
 
 
 export function extendEnvironment(newEndZ) {
-    // newEndZ: Yeni soruların en uzak Z pozisyonu (negatif değer)
-    // Güvenlik payı ekle
+
     const requiredLength = Math.abs(newEndZ) + 1000;
 
     const offset = (ROAD_WIDTH / 2) + (CURB_WIDTH / 2);
 
-    // Mevcut objeleri kaldır
+    // Remove old objects
     if (environmentObjects.road) {
         scene.remove(environmentObjects.road);
         environmentObjects.road.geometry.dispose();
@@ -160,7 +158,6 @@ export function extendEnvironment(newEndZ) {
         environmentObjects.ground.geometry.dispose();
     }
 
-    // Yeni uzunlukta yol oluştur
     const newRoadGeometry = new THREE.PlaneGeometry(ROAD_WIDTH, requiredLength);
     const roadMaterial = new THREE.MeshStandardMaterial({
         color: 0x16213e,
@@ -174,7 +171,6 @@ export function extendEnvironment(newEndZ) {
     scene.add(newRoad);
     environmentObjects.road = newRoad;
 
-    // Yeni uzunlukta kaldırımlar
     const newCurbGeometry = new THREE.BoxGeometry(CURB_WIDTH, CURB_HEIGHT, requiredLength);
     const curbMaterial = new THREE.MeshStandardMaterial({
         color: 0x800020,
@@ -200,7 +196,6 @@ export function extendEnvironment(newEndZ) {
     scene.add(newRightCurb);
     environmentObjects.rightCurb = newRightCurb;
 
-    // Yeni uzunlukta zemin
     const newGroundGeometry = new THREE.PlaneGeometry(10000, requiredLength + 5000);
     const groundMaterial = new THREE.MeshStandardMaterial({
         color: 0x808080,
@@ -274,32 +269,32 @@ export function createQuestionTable(scene, zPosition, questions) {
 
     const questionTable = new THREE.Group();
 
-    // 1. Canvas Ayarları (BOYUTLARA DOKUNMADIM)
+    // Canvas Settings
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.width = 1024;
     canvas.height = 512;
 
-    // Arka plan rengi
+    // Background
     context.fillStyle = '#ff0000';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Çerçeve (Görsellik için ekledim, boyutları bozmaz)
+    // Frame
     context.strokeStyle = "white";
     context.lineWidth = 15;
     context.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-    // --- TEXT WRAP (SATIR KAYDIRMA) MANTIĞI ---
+    // Text Wrap
     const fontSize = 60;
-    const lineHeight = 80; // Satırlar arası boşluk
-    const maxWidth = canvas.width - 100; // Yazı için güvenli alan (sağdan soldan pay)
+    const lineHeight = 80;
+    const maxWidth = canvas.width - 100; 
 
     context.font = `Bold ${fontSize}px Arial`;
     context.fillStyle = 'white';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 
-    // Kelimeleri parçala ve satırları hesapla
+    // Parsing Words
     const words = questions.split(' ');
     let line = '';
     const lines = [];
@@ -318,16 +313,15 @@ export function createQuestionTable(scene, zPosition, questions) {
     }
     lines.push(line);
 
-    // Bloğu dikey olarak ortala
+    // Aligning Text Vertically
     const totalBlockHeight = lines.length * lineHeight;
     let currentY = (canvas.height - totalBlockHeight) / 2 + (lineHeight / 2);
 
-    // Satırları tek tek çiz
+    // Drawing Text
     for (let i = 0; i < lines.length; i++) {
         context.fillText(lines[i], canvas.width / 2, currentY);
         currentY += lineHeight;
     }
-    // -------------------------------------------
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
@@ -337,15 +331,14 @@ export function createQuestionTable(scene, zPosition, questions) {
     const onYuzMateryali = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.5 });
 
     const materials = [
-        govdeRengi,     // Sağ
-        govdeRengi,     // Sol
-        govdeRengi,     // Üst
-        govdeRengi,     // Alt
-        onYuzMateryali, // ÖN (Index 4)
-        govdeRengi      // Arka
+        govdeRengi,    
+        govdeRengi,     
+        govdeRengi,     
+        govdeRengi,    
+        onYuzMateryali, 
+        govdeRengi     
     ];
 
-    // (GEOMETRİ VE KONUMLARA DOKUNMADIM)
     const tableGeometry = new THREE.BoxGeometry(10, 6, 1);
     const table = new THREE.Mesh(tableGeometry, materials);
 
@@ -360,7 +353,6 @@ export function createQuestionTable(scene, zPosition, questions) {
     questionTable.add(table);
     questionTable.add(column);
 
-    // (ORİJİNAL KONUM AYARI)
     questionTable.position.set(15, 0, zPosition);
 
     scene.add(questionTable);
@@ -378,10 +370,9 @@ export function createCar(scene) {
             (gltf) => {
                 const carModel = gltf.scene;
 
-                // Model çok büyük veya küçükse burayla oyna
                 carModel.scale.set(3, 3, 3);
 
-                // Gölgeleri aç
+                // Cast ve Receive Shadow
                 carModel.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -394,11 +385,11 @@ export function createCar(scene) {
                 resolve(carModel);
             },
 
-            // Yükleme sırasında ilerleme (Opsiyonel)
             (xhr) => {
                 console.log(`Yükleniyor: %${(xhr.loaded / xhr.total * 100).toFixed(0)}`);
             },
 
+            // Red Box for Error State
             (error) => {
                 console.warn("⚠️ Araba modeli bulunamadı veya yüklenemedi. Kırmızı kutu devreye giriyor.", error);
 

@@ -4,13 +4,13 @@ import { startGame, formatAnswer, getPrediction, continueGame, confirmSuccess } 
 import { CarController } from './car_controls.js';
 import { loadSounds, startMusic, playSoundEffect, startThinkingSound, stopThinkingSound } from './audio_manager.js';
 
-// --- GLOBAL HATA YAKALAMA ---
+// GLOBAL ERROR HANDLING
 window.onerror = function (msg, url, lineNo, columnNo, error) {
     console.error('❌ GLOBAL HATA:', msg, 'Satır:', lineNo);
     return false;
 };
 
-// --- DEĞİŞKENLER & DURUM YÖNETİMİ ---
+// Variables
 const clock = new THREE.Clock();
 let carController = null;
 let gameQuestions = [];
@@ -21,10 +21,9 @@ let isPredicting = false;
 let isGameStarted = false;
 let lastPrediction = null;
 
-// Soru mesafesi
 const DISTANCE_BETWEEN_QUESTIONS = 180;
 
-// --- UI ELEMENTLERI ---
+// UI Elements
 const startScreen = document.getElementById('start-screen');
 const startBtn = document.getElementById('start-btn');
 const loadingScreen = document.getElementById('loading-screen');
@@ -38,16 +37,16 @@ console.log("📦 main.js yüklendi");
 console.log("🔍 Start Screen:", startScreen ? "BULUNDU" : "BULUNAMADI");
 console.log("🔍 Start Button:", startBtn ? "BULUNDU" : "BULUNAMADI");
 
-// --- SAHNE KURULUMU ---
+// Scene Setup
 createLighting();
 createEnvironment();
 camera.position.set(0, 10, 20);
 
-// Başlangıçta soru container'ı gizle
+// Hide Questions
 if (questionContainer) questionContainer.style.display = 'none';
 if (controlsHint) controlsHint.style.display = 'none';
 
-// --- BAŞLAT BUTONU ---
+// Start Button Event
 if (startBtn) {
     startBtn.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -70,7 +69,7 @@ if (startBtn) {
     console.error("❌ START BUTTON BULUNAMADI!");
 }
 
-// --- OYUN BAŞLATMA ---
+// Game Initialization
 async function initGameWorld() {
     console.log("🚀 initGameWorld() başladı");
 
@@ -133,14 +132,14 @@ function updateLight() {
     if (carController && sunLight) {
         const carPos = carController.getPosition();
 
-        // Işık arabayı Z ekseninde takip etsin, ama mesafesini korusun
+        // Following Light
         sunLight.position.z = carPos.z + 50;
-        sunLight.target.position.z = carPos.z; // Işığın hedefi de araba olsun
+        sunLight.target.position.z = carPos.z; // Car is the target
         sunLight.target.updateMatrixWorld();
     }
 }
 
-// --- ÇARPIŞMA KONTROLÜ ---
+// Collision Detection
 function checkCollisions() {
     if (!carController || isGameOver || isPredicting || !isGameStarted) return;
 
@@ -181,7 +180,7 @@ function updateUI(questionIndex) {
     }
 }
 
-// --- OYUN BİTİŞİ ---
+// Game Finish
 async function finishGame() {
     console.log("🏁 ========== finishGame() ÇAĞRILDI ==========");
 
@@ -194,19 +193,14 @@ async function finishGame() {
 
     if (questionTextUI) questionTextUI.innerText = "🧠 Zihin Okunuyor...";
 
-    // --- YENİ: Düşünme Sesini Başlat ---
     startThinkingSound();
-    // -----------------------------------
 
     try {
         console.log("🔄 API'ye istek gönderiliyor...");
 
-        // Bu işlem 3-5 saniye sürer, bu arada ses çalacak
         const result = await getPrediction(userAnswers);
 
-        // --- YENİ: Sonuç Geldi, Sesi Durdur ---
         stopThinkingSound();
-        // -------------------------------------
 
         if (result && result.prediction) {
             lastPrediction = {
@@ -220,14 +214,13 @@ async function finishGame() {
     } catch (error) {
         console.error("❌ finishGame hatası:", error);
 
-        // Hata olsa bile sesi susturmayı unutma!
         stopThinkingSound();
 
         showGameEndOverlay("Hata: " + error.message);
     }
 }
 
-// --- TAHMİN SONUCU OVERLAY ---
+// Prediction Result Overlay
 function showPredictionResult(prediction, url) {
     console.log("📺 ========== showPredictionResult BAŞLADI ==========");
 
@@ -294,7 +287,7 @@ function showPredictionResult(prediction, url) {
     document.body.appendChild(overlay);
     console.log("✅ Overlay DOM'a eklendi");
 
-    // 3D Görüntüle
+    // Show 3D 
     const view3dBtn = document.getElementById('btn-view-3d');
     if (view3dBtn) {
         view3dBtn.onclick = function (e) {
@@ -304,7 +297,7 @@ function showPredictionResult(prediction, url) {
         };
     }
 
-    // Doğru Bildin
+    // Correct Button
     const correctBtn = document.getElementById('btn-correct');
     if (correctBtn) {
         correctBtn.onclick = async function (e) {
@@ -326,7 +319,7 @@ function showPredictionResult(prediction, url) {
         };
     }
 
-    // Yanlış - 5 Soru Daha
+    // Wrong Button
     const wrongBtn = document.getElementById('btn-wrong');
     if (wrongBtn) {
         wrongBtn.onclick = async function (e) {
@@ -356,7 +349,7 @@ function showPredictionResult(prediction, url) {
     console.log("📺 ========== showPredictionResult TAMAMLANDI ==========");
 }
 
-// --- OYUN SONU OVERLAY ---
+// Game End Overlay
 function showGameEndOverlay(message) {
     console.log("🔚 showGameEndOverlay:", message);
 
@@ -393,7 +386,7 @@ function showGameEndOverlay(message) {
     attachButtonSounds();
 }
 
-// --- OVERLAY TEMİZLEME ---
+// Remove Overlays
 function removeAllOverlays() {
     const ids = ['prediction-overlay', 'game-end-overlay', 'prediction-btn'];
     ids.forEach(id => {
@@ -405,7 +398,7 @@ function removeAllOverlays() {
     });
 }
 
-// --- YENİ SORU EKLEME ---
+// Add New Questions
 function addNewQuestions(newQuestions) {
     console.log("🆕 Yeni sorular ekleniyor:", newQuestions.length, "adet");
 
@@ -417,7 +410,7 @@ function addNewQuestions(newQuestions) {
     newQuestions.forEach((q, index) => {
         gameQuestions.push(q);
         const zPosition = startZ - (index * DISTANCE_BETWEEN_QUESTIONS);
-        furthestZ = zPosition; // En uzak Z pozisyonunu takip et
+        furthestZ = zPosition;
 
         createQuestionTable(scene, zPosition + 20, q.text);
         const walls = createDecisionWalls(scene, zPosition);
@@ -431,17 +424,14 @@ function addNewQuestions(newQuestions) {
         });
     });
 
-    // --- YENİ: Çevreyi uzat ---
     extendEnvironment(furthestZ);
-    // --------------------------
 
-    // Arabayı yeni soruların önüne konumlandır
     const nextZone = activeZones.find(z => !z.passed);
     if (nextZone && carController) {
         carController.carMesh.position.z = nextZone.z + 100;
     }
 
-    // Oyunu tekrar başlat
+    // Reset Game State
     isGameOver = false;
     isPredicting = false;
     if (carController) carController.start();
@@ -450,7 +440,7 @@ function addNewQuestions(newQuestions) {
     console.log("🏁 Oyun devam ediyor!");
 }
 
-// --- KAMERA TAKİBİ ---
+// Camera Update
 function updateCamera() {
     if (carController && isGameStarted && !isPredicting) {
         const carPos = carController.getPosition();
@@ -464,12 +454,9 @@ function attachButtonSounds() {
     const buttons = document.querySelectorAll('button');
     
     buttons.forEach(btn => {
-        // Eğer daha önce ses eklenmediyse ekle
         if (!btn.dataset.soundAttached) {
             
             btn.addEventListener('click', () => {
-                // "Doğru Bildin" butonu (btn-correct) HARİÇ diğerlerinde çal
-                // Çünkü onun kendi 'win' sesi zaten var.
                 if (btn.id !== 'btn-correct') {
                     playSoundEffect('click');
                 }
@@ -480,7 +467,7 @@ function attachButtonSounds() {
     });
 }
 
-// --- ANA DÖNGÜ ---
+// Main Loop
 function animate() {
     requestAnimationFrame(animate);
 

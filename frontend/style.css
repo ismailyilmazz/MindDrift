@@ -211,9 +211,6 @@ canvas {
     color: #00ffcc;
 }
 
-/* TAHMİN VE YENİDEN OYNA BUTONLARI */
-
-
 @keyframes pulse {
     0%, 100% { transform: translate(-50%, -50%) scale(1); }
     50% { transform: translate(-50%, -50%) scale(1.05); }
@@ -223,7 +220,6 @@ canvas {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
 
-/* Oyun sonu overlay */
 #game-end-overlay {
     position: fixed;
     top: 0;

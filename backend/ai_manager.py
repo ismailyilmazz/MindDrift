@@ -71,7 +71,7 @@ CEVAP (sadece nesne adı):"""
         Sadece saf HTML kodu ver. Markdown (```html) kullanma.
         """
         
-        code_res = await model.generate_content_async(code_prompt)
+        code_res = model.generate_content(code_prompt)
         clean_code = code_res.text.replace("```html", "").replace("```", "").strip()
         
         return {"prediction": prediction, "html_code": clean_code}

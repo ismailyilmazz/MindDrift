@@ -6,27 +6,51 @@
 
 # **How to run**
 
-1. Clone the Repository
-git clone https://github.com/ismailyilmazz/MindDrift.git
-cd <project-folder>
+<br>
 
-2. Create Environment Variables
+**Clone the Repository**
+
+git clone https://github.com/ismailyilmazz/MindDrift.git
+
+cd project-folder
+
+<br>
+
+**Create Environment Variables**
+
 Create a .env file in the root directory and add your Gemini API key:
+
 GEMINI_API_KEY=your_api_key_here
 
-3. Backend Setup
+<br>
+
+**Backend Setup**
+
 cd backend
+
 python -m venv venv
+
 source venv/bin/activate (macOS/Linux)
+
 venv\Scripts\activate (Windows)
+
 pip install -r requirements.txt
 
-4. Start Backend Server
+<br>
+
+**Start Backend Server**
+
 uvicorn start:app --reload
+
 http://127.0.0.1:8000
 
-5. Start Frontend
+<br>
+
+**Start Frontend**
+
 Open a new terminal and run:
+
 python -m http.server 5500
+
 http://127.0.0.1:5500
 
